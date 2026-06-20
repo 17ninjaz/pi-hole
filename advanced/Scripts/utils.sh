@@ -18,6 +18,7 @@
 ###############################################################################
 # Exit codes — use these constants instead of bare integers so callers can
 # distinguish failure reasons without parsing error messages.
+# shellcheck disable=SC2034  # used by scripts that source this file
 ###############################################################################
 readonly EXIT_OK=0
 readonly EXIT_GENERAL_ERROR=1

@@ -2,6 +2,7 @@
 # Unit tests for advanced/Scripts/utils.sh
 # Run with: bats test/unit/test_utils.bats
 
+# shellcheck disable=SC1090  # UTILS_SH is a variable path; location is documented below
 UTILS_SH="${BATS_TEST_DIRNAME}/../../advanced/Scripts/utils.sh"
 
 setup() {
@@ -77,7 +78,6 @@ setup() {
 @test "addOrEditKeyValPair adds a new key" {
     local tmpfile
     tmpfile="$(mktemp)"
-    source "${UTILS_SH}"
     addOrEditKeyValPair "${tmpfile}" "MY_KEY" "myvalue"
     grep -q "^MY_KEY=myvalue$" "${tmpfile}"
     rm -f "${tmpfile}"
@@ -87,18 +87,16 @@ setup() {
     local tmpfile
     tmpfile="$(mktemp)"
     echo "MY_KEY=old" > "${tmpfile}"
-    source "${UTILS_SH}"
     addOrEditKeyValPair "${tmpfile}" "MY_KEY" "new"
     grep -q "^MY_KEY=new$" "${tmpfile}"
     # Old value must not appear
-    ! grep -q "old" "${tmpfile}"
+    run ! grep -q "old" "${tmpfile}"
     rm -f "${tmpfile}"
 }
 
 @test "addOrEditKeyValPair does not duplicate keys" {
     local tmpfile
     tmpfile="$(mktemp)"
-    source "${UTILS_SH}"
     addOrEditKeyValPair "${tmpfile}" "DUP_KEY" "v1"
     addOrEditKeyValPair "${tmpfile}" "DUP_KEY" "v2"
     local count
