@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Pi-hole: A black hole for Internet advertisements
 # (c) 2017 Pi-hole, LLC (https://pi-hole.net)
@@ -14,6 +14,41 @@
 #  - Functions should be grouped with other similar functions
 #  - Functions must be documented
 #  - New functions must have a test added for them in test/test_any_utils.py
+
+###############################################################################
+# Exit codes — use these constants instead of bare integers so callers can
+# distinguish failure reasons without parsing error messages.
+# shellcheck disable=SC2034  # used by scripts that source this file
+###############################################################################
+readonly EXIT_OK=0
+readonly EXIT_GENERAL_ERROR=1
+readonly EXIT_INVALID_USAGE=2
+readonly EXIT_NETWORK_ERROR=3
+readonly EXIT_DB_ERROR=4
+# Exit code 5 is reserved: FTL returns it when a config key is set read-only
+# via an environment variable (see setFTLConfigValue).
+
+###############################################################################
+# Logging helper
+###############################################################################
+
+#######################
+# Write a timestamped log line to stdout (INFO) or stderr (WARN/ERROR).
+#
+# Usage: pihole_log INFO|WARN|ERROR "message"
+# Example: pihole_log ERROR "gravity database is missing"
+#######################
+pihole_log() {
+    local level="${1}"
+    local message="${2}"
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    case "${level}" in
+        ERROR) printf "[%s] [ERROR] %s\n" "${timestamp}" "${message}" >&2 ;;
+        WARN)  printf "[%s] [WARN]  %s\n" "${timestamp}" "${message}" >&2 ;;
+        *)     printf "[%s] [INFO]  %s\n" "${timestamp}" "${message}" ;;
+    esac
+}
 
 #######################
 # Takes Three arguments: file, key, and value.
