@@ -1149,6 +1149,10 @@ for var in "$@"; do
   esac
 done
 
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    return 0
+fi
+
 # Check if DNS is available, no need to do any database manipulation if we're not able to download adlists
 if ! timeit gravity_CheckDNSResolutionAvailable; then
   echo -e "   ${CROSS} No DNS resolution available. Please contact support."

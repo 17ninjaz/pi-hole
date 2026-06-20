@@ -1,6 +1,7 @@
 #!/usr/bin/env bats
 # Unit tests for advanced/Scripts/utils.sh
 # Run with: bats test/unit/test_utils.bats
+bats_require_minimum_version 1.5.0
 
 # shellcheck disable=SC1090  # UTILS_SH is a variable path; location is documented below
 UTILS_SH="${BATS_TEST_DIRNAME}/../../advanced/Scripts/utils.sh"

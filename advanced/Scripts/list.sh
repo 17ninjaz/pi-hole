@@ -198,32 +198,34 @@ GetComment() {
     fi
 }
 
-while (( "$#" )); do
-    case "${1}" in
-        "allow" | "allowlist" ) kindId="exact"; typeId="allow"; abbrv="allow";;
-        "deny" | "denylist"   ) kindId="exact"; typeId="deny"; abbrv="deny";;
-        "--allow-regex" | "allow-regex" ) kindId="regex"; typeId="allow"; abbrv="--allow-regex";;
-        "--allow-wild" | "allow-wild" ) kindId="regex"; typeId="allow"; wildcard=true; abbrv="--allow-wild";;
-        "--regex" | "regex"   ) kindId="regex"; typeId="deny"; abbrv="--regex";;
-        "--wild" | "wildcard" ) kindId="regex"; typeId="deny"; wildcard=true; abbrv="--wild";;
-        "-d" | "remove" | "delete" ) addmode=false;;
-        "-q" | "--quiet"     ) verbose=false;;
-        "-h" | "--help"      ) helpFunc;;
-        "-l" | "--list"      ) Displaylist;;
-        "--comment"          ) GetComment "${2}"; shift;;
-        *                    ) CreateDomainList "${1}";;
-    esac
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    while (( "$#" )); do
+        case "${1}" in
+            "allow" | "allowlist" ) kindId="exact"; typeId="allow"; abbrv="allow";;
+            "deny" | "denylist"   ) kindId="exact"; typeId="deny"; abbrv="deny";;
+            "--allow-regex" | "allow-regex" ) kindId="regex"; typeId="allow"; abbrv="--allow-regex";;
+            "--allow-wild" | "allow-wild" ) kindId="regex"; typeId="allow"; wildcard=true; abbrv="--allow-wild";;
+            "--regex" | "regex"   ) kindId="regex"; typeId="deny"; abbrv="--regex";;
+            "--wild" | "wildcard" ) kindId="regex"; typeId="deny"; wildcard=true; abbrv="--wild";;
+            "-d" | "remove" | "delete" ) addmode=false;;
+            "-q" | "--quiet"     ) verbose=false;;
+            "-h" | "--help"      ) helpFunc;;
+            "-l" | "--list"      ) Displaylist;;
+            "--comment"          ) GetComment "${2}"; shift;;
+            *                    ) CreateDomainList "${1}";;
+        esac
+        shift
+    done
+
     shift
-done
 
-shift
+    if [[ ${#domList[@]} == 0 ]]; then
+        helpFunc
+    fi
 
-if [[ ${#domList[@]} == 0 ]]; then
-    helpFunc
-fi
-
-if ${addmode}; then
-    AddDomain
-else
-    RemoveDomain
+    if ${addmode}; then
+        AddDomain
+    else
+        RemoveDomain
+    fi
 fi
