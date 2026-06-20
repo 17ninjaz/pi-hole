@@ -94,7 +94,12 @@ gravity_build_tree() {
   echo -ne "  ${INFO} ${str}..."
 
   # The index is intentionally not UNIQUE as poor quality adlists may contain domains more than once
-  output=$({ pihole-FTL sqlite3 -ni "${gravityTEMPfile}" "CREATE INDEX idx_${table} ON ${table} (domain, adlist_id);"; } 2>&1)
+  # Pragmas are connection-scoped and do not persist to the DB file:
+  #   temp_store=2  — keep SQLite sort/temp tables in RAM (avoids SD card spill)
+  #   cache_size     — 16 MB page cache; negligible on 1 GB RAM but cuts random
+  #                    read round-trips significantly on slow SD card storage
+  output=$({ pihole-FTL sqlite3 -ni "${gravityTEMPfile}" \
+    "PRAGMA temp_store=2; PRAGMA cache_size=-16384; CREATE INDEX idx_${table} ON ${table} (domain, adlist_id);"; } 2>&1)
   status="$?"
 
   if [[ "${status}" -ne 0 ]]; then
