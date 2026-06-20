@@ -184,7 +184,20 @@ LoginAPI() {
 }
 
 Authentication() {
-    sessionResponse="$(curl --connect-timeout 2 -skS -X POST "${API_URL}auth" --user-agent "Pi-hole cli" --data "{\"password\":\"${password}\", \"totp\":${totp:-null}}" )"
+    # Write auth payload to a restricted temp file so the password never
+    # appears in the curl argument list (and thus never in `ps` output).
+    local auth_tmp
+    auth_tmp="$(mktemp)"
+    chmod 600 "${auth_tmp}"
+    # jq handles all escaping; password is passed as a variable, not interpolated.
+    jq --null-input --compact-output \
+        --arg pw "${password}" \
+        --argjson totp "${totp:-null}" \
+        '{"password": $pw, "totp": $totp}' > "${auth_tmp}"
+
+    sessionResponse="$(curl --connect-timeout 2 -skS -X POST "${API_URL}auth" \
+        --user-agent "Pi-hole cli" --data @"${auth_tmp}")"
+    rm -f "${auth_tmp}"
 
     if [ -z "${sessionResponse}" ]; then
         echo "No response from FTL server. Please check connectivity"

@@ -587,6 +587,8 @@ gravity_DownloadBlocklists() {
   DownloadBlocklists_done=true
 }
 
+# Compare a freshly-downloaded list file against its stored SHA-1 checksum and
+# update the adlist status in the database accordingly (1 = changed, 2 = unchanged).
 compareLists() {
   local adlistID="${1}" target="${2}"
 
