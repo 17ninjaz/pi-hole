@@ -42,7 +42,9 @@ pihole_log() {
     local level="${1}"
     local message="${2}"
     local timestamp
-    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    # Use bash's built-in time formatter (no fork) — avoids spawning `date`
+    # on every call, which matters on slow ARM hardware like the Pi 3B+.
+    printf -v timestamp '%(%Y-%m-%d %H:%M:%S)T' -1
     case "${level}" in
         ERROR) printf "[%s] [ERROR] %s\n" "${timestamp}" "${message}" >&2 ;;
         WARN)  printf "[%s] [WARN]  %s\n" "${timestamp}" "${message}" >&2 ;;
@@ -137,7 +139,8 @@ getFTLPID() {
 
     if [ -s "${FTL_PID_FILE}" ]; then
         # -s: FILE exists and has a size greater than zero
-        FTL_PID="$(cat "${FTL_PID_FILE}")"
+        # Use the read builtin instead of $(cat ...) to avoid a fork on ARM.
+        read -r FTL_PID < "${FTL_PID_FILE}"
         # Exploit prevention: unset the variable if there is malicious content
         # Verify that the value read from the file is numeric
         expr "${FTL_PID}" : "[^[:digit:]]" > /dev/null && unset FTL_PID
