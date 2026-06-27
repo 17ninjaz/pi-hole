@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Stub COL_TABLE for unit tests — empty colour variables
+COL_NC=""
+COL_RED=""
+COL_GREEN=""
+COL_YELLOW=""
+COL_BLUE=""
+COL_PURPLE=""
+COL_CYAN=""
+COL_ULINE=""
+TICK="[tick]"
+CROSS="[cross]"
+INFO="[info]"
+DONE="[done]"
+OVER=""

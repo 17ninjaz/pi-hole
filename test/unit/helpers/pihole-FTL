@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Mock pihole-FTL for unit tests.
+# When invoked as "pihole-FTL sqlite3 ...", delegates to the system sqlite3 binary.
+# pihole-FTL passes its own flags (-ni) to its embedded SQLite shell; we strip
+# those before forwarding to system sqlite3 which does not accept them.
+
+case "${1}" in
+    sqlite3)
+        shift
+        args=()
+        for arg in "$@"; do
+            case "${arg}" in
+                # -ni and -in are pihole-FTL-only flags for its embedded SQLite shell
+                -ni|-in|-n|-i) ;;
+                *) args+=("${arg}") ;;
+            esac
+        done
+        exec sqlite3 "${args[@]}"
+        ;;
+    --config)
+        # Return empty string for any config key query
+        echo ""
+        ;;
+    *)
+        exit 0
+        ;;
+esac

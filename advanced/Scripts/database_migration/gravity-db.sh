@@ -10,7 +10,8 @@
 # This file is copyright under the latest version of the EUPL.
 # Please see LICENSE file for your rights under this license.
 
-readonly scriptPath="/etc/.pihole/advanced/Scripts/database_migration/gravity"
+: "${scriptPath:=/etc/.pihole/advanced/Scripts/database_migration/gravity}"
+readonly scriptPath
 
 # Run a single gravity migration SQL script and abort on failure.
 # Usage: run_migration <from_version> <to_version> <database>
