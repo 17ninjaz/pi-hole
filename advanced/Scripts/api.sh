@@ -119,7 +119,7 @@ LoginAPI() {
 
     # Try to read the CLI password (if enabled and readable by the current user)
     if [ -r /etc/pihole/cli_pw ]; then
-        password=$(cat /etc/pihole/cli_pw)
+        read -r password < /etc/pihole/cli_pw
 
         if [ "${1}" = "verbose" ]; then
             echo "API Authentication: Trying to use CLI password"
