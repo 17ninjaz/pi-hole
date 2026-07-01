@@ -455,14 +455,15 @@ gravity_DownloadBlocklists() {
   str="Creating new gravity databases"
   echo -ne "  ${INFO} ${str}..."
 
-  # Gravity copying SQL script
-  copyGravity="$(cat "${gravityDBcopy}")"
+  # Gravity copying SQL script — feed file directly to avoid $(cat) fork and
+  # herestring temp-file I/O (significant on SD-card storage like Pi 3B+).
   if [[ "${gravityDBfile}" != "${gravityDBfile_default}" ]]; then
-    # Replace default gravity script location by custom location
-    copyGravity="${copyGravity//"${gravityDBfile_default}"/"${gravityDBfile}"}"
+    # Non-default path: substitute the gravity DB path on the fly with sed
+    output=$({ sed "s|${gravityDBfile_default}|${gravityDBfile}|g" "${gravityDBcopy}" \
+               | pihole-FTL sqlite3 -ni "${gravityTEMPfile}"; } 2>&1)
+  else
+    output=$({ pihole-FTL sqlite3 -ni "${gravityTEMPfile}" < "${gravityDBcopy}"; } 2>&1)
   fi
-
-  output=$({ pihole-FTL sqlite3 -ni "${gravityTEMPfile}" <<<"${copyGravity}"; } 2>&1)
   status="$?"
 
   if [[ "${status}" -ne 0 ]]; then
@@ -490,11 +491,24 @@ gravity_DownloadBlocklists() {
     echo -e "${OVER}  ${TICK} ${str}"
   fi
 
-  # Retrieve source URLs from gravity database
+  # Retrieve source URLs from gravity database in one SQLite call (saves two
+  # process spawns per gravity update — each spawn is expensive on Pi 3B+).
+  # Columns are tab-separated via char(9); tabs cannot appear in URLs or integers.
   # We source only enabled adlists, SQLite3 stores boolean values as 0 (false) or 1 (true)
-  mapfile -t sources <<<"$(pihole-FTL sqlite3 -ni "${gravityDBfile}" "SELECT address FROM vw_adlist;" 2>/dev/null)"
-  mapfile -t sourceIDs <<<"$(pihole-FTL sqlite3 -ni "${gravityDBfile}" "SELECT id FROM vw_adlist;" 2>/dev/null)"
-  mapfile -t sourceTypes <<<"$(pihole-FTL sqlite3 -ni "${gravityDBfile}" "SELECT type FROM vw_adlist;" 2>/dev/null)"
+  local -a _adlist_rows
+  mapfile -t _adlist_rows <<<"$(pihole-FTL sqlite3 -ni "${gravityDBfile}" \
+      "SELECT address || char(9) || id || char(9) || type FROM vw_adlist;" 2>/dev/null)"
+  sources=()
+  sourceIDs=()
+  sourceTypes=()
+  local _row _addr _id _type
+  for _row in "${_adlist_rows[@]}"; do
+    IFS=$'\t' read -r _addr _id _type <<< "${_row}"
+    sources+=("${_addr}")
+    sourceIDs+=("${_id}")
+    sourceTypes+=("${_type}")
+  done
+  unset _adlist_rows _row _addr _id _type
 
   # Parse source domains from $sources
   mapfile -t sourceDomains <<<"$(
